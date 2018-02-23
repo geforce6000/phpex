@@ -13,22 +13,31 @@
 
 	$mydb = new Mydb($info);
 
-	$data = array ( 7, "test7", 0, 1);
+	$data = array (
+			'classid'=>8,
+			'classname'=>"test8",
+			'parentid'=>0,
+			'onlist'=>1);
 
-	/*$dataForUpdate = array (
-		'classname'=>'test6');*/
+	$dataForUpdate = array (
+		'classname'=>'test6');
 	
 	/*$mydb->from('articleclass')
 			 ->insert($data);*/
 
 	/*$data = $mydb->from('articleclass')
-			 ->where('classid=4')
+			 ->where('classid',4)
 			 ->update($dataForUpdate);*/
 
 	$e = $mydb->from('articleclass')
-			 //->limit(2)
+			 //->like('classname', 6)
+			 //->like('onlist', 0)
+			 //->limit(3,3)
+			 //->orderby('classname DESC')
+			 //->orderby('classid')
 			 //->select('classid, classname')
-			 //->where('parentid=0 and classid=2')
+			 ->where('classname','test6')
+			 ->where('classid',2,">")
 			 ->get();
 
 	foreach ($e as $value) {
@@ -36,6 +45,6 @@
 		echo "</br>";
 	}
 
-	
-  
+
+
 ?>

@@ -4,24 +4,15 @@
 
 		//自建数据库操作类，提供基本的增删查改功能
 		//有一定的适应性，不需要为每个数据库重写
-		
-		//$serverName 		    服务器地址
-		//$userName 			用户名
-		//$password 			密码
-		//$dbname 				数据库名称
-		//$db 					连接数据库对象
-		//$connectStatus 	    连接状态
 
-		protected $serverName;
-		protected $userName;
-		protected $password;
-		protected $port;
-		protected $dbname;
-		protected $db;
-		protected $connectStatus;
+		protected $serverName;	//服务器地址
+		protected $userName;		//用户名
+		protected $password;		//密码
+		protected $port;				//端口
+		protected $dbname;			//数据库名称
+		protected $db;					//连接数据库对象
 
-        //$queryArray			用于保存数据库连贯操作的数组，用以组合sql命令
-
+		//$queryArray			用于保存数据库连贯操作的数组，用以组合sql命令
 		//select, where, orderby, limit, like, from, order为连贯操作方法
 		//query, get, update, insert, delete为直接操作方法
 		protected $queryArray = array (
@@ -33,7 +24,8 @@
 			'like'=>'',
 			'from'=>''
 			);
-        //空数组，用于清空$queryArray
+
+    //空数组，用于清空$queryArray
 		protected $queryBlank = array (
 			'select'=>'',
 			'where'=>'',
@@ -56,7 +48,6 @@
 			if ($this->db->connect_error) {
 				die("连接失败");
 			}
-			$this->connectStatus = 1;
 			$this->db->query("set names 'utf8'");
 		}
 
@@ -74,8 +65,13 @@
 
 		//生成SQL指令中字段条件部分
 		//$where 		string 		条件字符串
-		function where ( $where ) {
-			$this->queryArray['where'] .= " ".$where;
+		//$logic		string		比较条件，默认是 AND，还可以是 OR 或 NOT
+		function where ( $key, $value, $operator="=", $logic="AND" ) {
+			if($this->queryArray['where'] == "") {
+				$this->queryArray['where'] .= " ".$key.$operator."'".$value."'";
+			} else {
+				$this->queryArray['where'] .= " ".$logic." ".$key.$operator."'".$value."'";
+			}
 			return $this;
 		}
 
@@ -86,10 +82,40 @@
 			return $this;
 		}
 
-        //生成SQL指令中字段限制数量部分
-        //$limit 		string 		数量限制字符串
-		function limit ( $limit ) {
-			$this->queryArray['limit'] = " ".$limit;
+		//生成SQL指令中字段限制数量部分
+		//$num 			int 		获取记录条数
+		//$offset		int		获取记录偏移位置
+		function limit ( $num, $offset=0 ) {
+			//echo "num: $num, offset: $offset";
+			if ( $offset == 0 ) {
+				$this->queryArray['limit'] = " ".$num;
+			} else {
+				$this->queryArray['limit'] = " ".$offset.", ".$num;
+			}
+			return $this;
+		}
+		//生成SQL指令中的like部分
+		//$key			string		字段名
+		//$value		string		搜索用数值，默认两边加%
+		//$logic		string		比较条件，默认是 AND，还可以是 OR 或 NOT
+		function like ( $key, $value, $logic="AND" ) {
+			if( $this->queryArray['where'] <> "") {
+				$this->queryArray['where'] .= " ".$logic." ".$key." LIKE "."'%".$value."%'";
+			} else {
+				$this->queryArray['where'] .= " ".$key." LIKE "."'%".$value."%'";
+			}
+			return $this;
+		}
+
+		//生成SQL指令中的order by部分
+		//$key			string		排序的字段名
+		//$order		string		排序条件，默认是 ASC，还可以是 DESC
+		function orderby ( $key ) {
+			if ($this->queryArray['orderby'] == "") {
+				$this->queryArray['orderby'] = " ".$key;
+			} else {
+				$this->queryArray['orderby'] .= " , ".$key;
+			}
 			return $this;
 		}
 
@@ -102,15 +128,16 @@
 				if ($this->queryArray['select']<>"") { $sqlOrder .= $this->queryArray['select']; } else { $sqlOrder .= "*";}
 				$sqlOrder .= " FROM ".$this->queryArray['from']." ";
 				if ($this->queryArray['where']<>"") $sqlOrder .= " WHERE".$this->queryArray['where'];
+				if ($this->queryArray['orderby']<>"") $sqlOrder .= " ORDER BY".$this->queryArray['orderby'];
 				if ($this->queryArray['limit']<>"") $sqlOrder .= " LIMIT".$this->queryArray['limit'];
-				if ($this->queryArray['orderby']<>"") $sqlOrder .= " ORDER BY".$this->queryArray['orderby']." ".$this->queryArray['order'];
 				$this->clearArray();
 				return $sqlOrder;
 			}
 			//$order == "insert" 表示生成插入命令
 			if ($order == "insert") {
-				$data = $this->checkInsertData($data);
-				$sqlOrder = "INSERT INTO ".$this->queryArray['from']." VALUES (".$data.")";
+				$values = $this->checkInsertData($data);
+				$field = "(".implode(",", array_keys($data)).")";
+				$sqlOrder = "INSERT INTO ".$this->queryArray['from']." ".$field." VALUES (".$values.")";
 				$this->clearArray();
 				return $sqlOrder;
 			}
@@ -122,14 +149,13 @@
 				}
 				$sqlOrder .= " WHERE ".$this->queryArray['where'];
 				$this->clearArray();
-				/*print_r($this->queryArray);*/
 				return $sqlOrder;
 			}
 		}
 
 		//insert 方法，用于向数据表中插入一条记录
 		//$tableName 	string 	插入的表名
-		//dataArray		array 	插入的数据
+		//dataArray		array 	插入的数据，键名为字段名，值为对应字段插入的数据
 		//返回：插入成功返回 TRUE ，否则返回 FALSE
 		function insert( $dataArray ) {
 			$sqlOrder = $this->combineSqlOrder('insert', $dataArray);
@@ -141,14 +167,23 @@
 		}
 
 		//get 方法，用于从数据表中获取记录
-		//返回：一个数组，每一项是一条记录
+		//返回：一个数组，每一项是一条记录，如果没查到数据，也会返回一个数组，内容为空
 		function get () {
 			$sqlOrder = $this->combineSqlOrder('select');
+			echo $sqlOrder.'</br>';
 			$result = $this->db->query($sqlOrder);
 			if($result->num_rows > 0) {
 				while ($row = $result->fetch_assoc()) {
 					$data[] = $row;
 				}
+			} else {
+				$data = array
+				(
+					'not found'=>array
+					(
+						'record'=>0
+					)
+				);
 			}
 			return $data;
 		}
@@ -169,6 +204,7 @@
 		}
 
 		//用于将insert方法中存储插入数据的数组转换成可以用在SQL指令中的字符串
+		//参数：$data Array
 		//操作是将数组每一个项的 value 加上双引号
 		//返回：一个字符串
 		function checkInsertData ($data) {
