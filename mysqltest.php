@@ -12,7 +12,7 @@
 		'port'=>'3306');
 
 	$mydb = new Mydb($info);
-
+	echo $mydb;
 	$data = array (
 			'classid'=>8,
 			'classname'=>"test8",
@@ -20,30 +20,33 @@
 			'onlist'=>1);
 
 	$dataForUpdate = array (
-		'classname'=>'test6');
+		'onlist'=>'1');
 	
 	/*$mydb->from('articleclass')
 			 ->insert($data);*/
 
 	/*$data = $mydb->from('articleclass')
-			 ->where('classid',4)
+			 ->where('classid <',6)
 			 ->update($dataForUpdate);*/
 
-	$e = $mydb->from('articleclass')
+	$e = $mydb->from('articleclassRoot')
 			 //->like('classname', 6)
 			 //->like('onlist', 0)
 			 //->limit(3,3)
 			 //->orderby('classname DESC')
 			 //->orderby('classid')
 			 //->select('classid, classname')
-			 ->where('classname','test6')
-			 ->where('classid',2,">")
+			 //->where('classname','test6')
+			 //->where('classid >',2)
+			 //->where('classid <',5)
 			 ->get();
 
-	foreach ($e as $value) {
+	echo $mydb;
+
+	/*foreach ($e as $value) {
 		print_r($value);
 		echo "</br>";
-	}
+	}*/
 
 
 
