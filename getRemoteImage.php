@@ -6,9 +6,9 @@
  * Time: 17:00
  */
     /*
-    *功能：php完美实现下载远程图片保存到本地
-    *参数：文件url,保存文件目录,保存文件名称，使用的下载方式
-    *当保存文件名称为空时则使用远程文件原来的名称
+    * 功能：php完美实现下载远程图片保存到本地
+    * 参数：文件url,保存文件目录,保存文件名称，使用的下载方式
+    * 当保存文件名称为空时则使用远程文件原来的名称
     */
     function getImage($url,$save_dir='',$filename='',$type=0){
         if(trim($url)==''){
@@ -55,7 +55,17 @@
         return array('file_name'=>$filename,'save_path'=>$save_dir.$filename,'error'=>0);
     }
 
-    //$result=httpcopy('http://www.phpernote.com/image/logo.gif', "/files/file");
+    /*
+     * 获取远程服务器的文件到本地
+     * 参数
+     * $url         string      要下载文件的url
+     * $dir         string      本地保存文件的路径
+     * $file        string      可选，保存的文件名，省略即用远程文件的原名
+     * $timeout     int         等待时间
+     * 使用：$result = httpcopy('http://www.phpernote.com/image/logo.gif', "/files/file");
+     * 返回：array ( 'filename', 'way', 'size' )
+     */
+
 
     function httpcopy($url, $dir, $file='',$timeout=60){
         $file=empty($file)?pathinfo($url,PATHINFO_BASENAME):$file;
