@@ -14,53 +14,53 @@
         include strtolower( $classname ).".class.php";
     }
 
-    $info = array (
-        'serverName'=>'localhost',
-        'userName'=>'jjkjzz',
-        'password'=>'jjkjzz',
-        'dbname'=>'jjkjzz',
-        'port'=>'3306');
+		$dbinfo = array (
+			'dbms'=>'mysql',        //连接类型
+			'host'=>'localhost',        //服务器地址
+			'user'=>'jjkjzz',        //用户名
+			'dbname'=>'crawler',
+			'password'=>'jjkjzz',    //密码
+			'charset'=>'utf8',
+			'port'=>3306        //端口
+		);
 
-    $mydb = new Mydb($info);
+		$mydb = new Mypdo($dbinfo);
 
     //获得所有入口文件名称，保存在 $e 数组中
-    $e = $mydb->from( 'articleclassRoot' )
+		//$e array 每个值是一个数组，保存6个入口文件名称
+    $e = $mydb->from( 'articleclass' )
               ->select( 'path' )
               ->where( 'parentid', 0 )
-              ->where( 'classid >', 0 )
-              ->where( 'classid <', 999 )
               ->get();
 
     //域名
     $url = "http://www.jjkjzz.com:8080/";
 
     //获得每个入口页面数量，保存在 $pages 数组中
+		//遍历$e，
     foreach ( $e as $element ) {
         $listUrl = $url . $element['path'];
         $listPage = file_get_html ( $listUrl );
         foreach ( $listPage->find('div.paginator') as $pagi ) {
             if ( count( $pagi->children() ) == 0 ) {
-                //echo $element['path'] . ": no pagi</br>";
-                $pages[] = 0;
+                $pages[] = 1;
             } else {
-                //echo $element['path'] . ": has pagi</br>";
                 foreach ($listPage->find('td.page_last') as $item) {
-                    //echo "-->".$item->getAttribute('class');
-                    //echo " pages: ".$item->children(0)->getAttribute('data-page')."</br>";
                     $pages[] = $item->children(0)->getAttribute('data-page');
                 }
             }
-
         }
     }
     //获得全部页面的链接，保存在 $pageUrl 数组中
     for ($i = 0; $i < 6; $i++) {
         for ($j = 1; $j <= $pages[$i]; $j++) {
             $pageUrl[] = $url.$e[$i]['path']."?pg=".$j;
+            echo $url.$e[$i]['path']."?pg=".$j.'</br>';
         }
     }
 
-    echo $pageUrl[0]."</br>";
+
+    /*echo $pageUrl[0]."</br>";
 
     $articleUrls = getArticleUrl ( $pageUrl[0] );
 
@@ -70,7 +70,7 @@
 
     $a = $mydb->from('articledata')->get();
 
-    print_r($a);
+    print_r($a);*/
 
 
 
