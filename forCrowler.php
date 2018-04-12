@@ -82,8 +82,9 @@ function getImage( $url, $save_dir='' ,$filename='' ,$type=1 ) {
 	$fp2=@fopen($save_dir.$filename,'a' );
 	fwrite( $fp2, $img );
 	fclose( $fp2 );
+	$imgSize = strlen($img);
 	unset( $img, $url );
-	return array( 'file_name'=>$filename, 'save_path'=>$save_dir.$filename, 'error'=>0 );
+	return array( 'file_name'=>$filename, 'save_path'=>$save_dir.$filename, 'error'=>0, 'filesize'=>$imgSize );
 }
 
 /*
